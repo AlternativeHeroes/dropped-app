@@ -14,6 +14,8 @@ import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.ToneGenerator;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -28,6 +30,8 @@ public class DropService extends Service implements SensorEventListener {
     private MediaPlayer player;
     SharedPreferences dropPreference;
     int dropType;
+
+    private String uniqueID;
 
     public boolean isFalling = false;
 
@@ -47,6 +51,10 @@ public class DropService extends Service implements SensorEventListener {
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         }
         Log.d(TAG, "Location X:" + (location.getLatitude() * 10000) + " ,Y:" + (location.getLatitude() * 10000));
+
+        WifiManager manager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        WifiInfo info = manager.getConnectionInfo();
+        uniqueID = info.getMacAddress();
     }
 
     @Override

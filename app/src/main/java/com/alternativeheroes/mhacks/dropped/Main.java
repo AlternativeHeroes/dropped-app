@@ -6,8 +6,11 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -163,12 +166,12 @@ public class Main extends FragmentActivity {
         // while interacting with the UI.
         findViewById(R.id.switch1).setOnTouchListener(mDelayHideTouchListener);
         ((Switch) findViewById(R.id.switch1)).setOnCheckedChangeListener(
-            new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    Main.this.changePowerState(isChecked);
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Main.this.changePowerState(isChecked);
+                    }
                 }
-            }
         );
 
         dropAdapter = new DropModePagerAdapter(getSupportFragmentManager());
