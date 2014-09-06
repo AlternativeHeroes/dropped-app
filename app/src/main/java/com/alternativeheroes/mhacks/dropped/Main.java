@@ -9,12 +9,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -166,7 +168,8 @@ public class Main extends FragmentActivity {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.switch1).setOnTouchListener(mDelayHideTouchListener);
-        ((Switch) findViewById(R.id.switch1)).setOnCheckedChangeListener(
+        Switch mainBreaker = ((Switch) findViewById(R.id.switch1));
+        mainBreaker.setOnCheckedChangeListener(
                 new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -175,27 +178,42 @@ public class Main extends FragmentActivity {
                 }
         );
 
-
         dropAdapter = new DropModePagerAdapter(getSupportFragmentManager());
-        ((ViewPager) contentView).setAdapter(dropAdapter);
-        ((ViewPager) contentView).setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+        ViewPager pager = ((ViewPager) contentView);
+        pager.setAdapter(dropAdapter);
+        pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
                 Main.this.changeMode(position);
             }
         });
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        int curr_mode = prefs.getInt(Constants.dropType, Constants.DROPTYPE_MUSIC);
+        pager.setCurrentItem(curr_mode);
+
+        if (!isServiceConnected) {
+            mainBreaker.setChecked(false);
+        }
     }
 
     private void changeMode(int mode) {
+        Toast.makeText(this, "CHANGED MODE", Toast.LENGTH_SHORT).show();
 
+        if (isServiceConnected) {
+            dropService.changeDropMode(mode);
+        }
     }
 
     private void changePowerState(CompoundButton buttonView, boolean isOn) {
+        Toast.makeText(this, "CHANGED ENABLED", Toast.LENGTH_SHORT).show();
+
         if (isServiceConnected && !isOn) {
+            dropService.stopServiceAndSavePreference();
             buttonView.setText("Stopped.");
         }
         else if (!isServiceConnected && isOn) {
+            dropService.startServiceAndSavePreference();
             buttonView.setText("Currently Running");
         }
     }

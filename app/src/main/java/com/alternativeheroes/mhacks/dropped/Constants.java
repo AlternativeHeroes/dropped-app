@@ -10,4 +10,6 @@ public class Constants {
     public static int DROPTYPE_MUSIC = 0;
     public static int DROPTYPE_SCREAM = 1;
     public static String dropType = "com.alternateheroes.mhacks.dropped.dropType";
+
+    public static final String dropEnabled = "com.alternateheroes.mhacks.dropped.dropEnabled";
 }
