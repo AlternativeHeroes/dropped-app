@@ -102,10 +102,18 @@ public class Main extends FragmentActivity {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         setContentView(R.layout.activity_main);
+        Switch mainBreaker = ((Switch) findViewById(R.id.switch1));
 
-        Intent connectDropService = new Intent(this,DropService.class);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        if (prefs.getBoolean(Constants.dropEnabled, true)) {
 
-        bindService(connectDropService, dropServiceConnection, Service.BIND_AUTO_CREATE);
+            Intent connectDropService = new Intent(this, DropService.class);
+            bindService(connectDropService, dropServiceConnection, Service.BIND_AUTO_CREATE);
+
+        } else {
+            mainBreaker.setChecked(false);
+            mainBreaker.setText(R.string.switch_text_off);
+        }
 
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
@@ -167,8 +175,7 @@ public class Main extends FragmentActivity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.switch1).setOnTouchListener(mDelayHideTouchListener);
-        Switch mainBreaker = ((Switch) findViewById(R.id.switch1));
+        mainBreaker.setOnTouchListener(mDelayHideTouchListener);
         mainBreaker.setOnCheckedChangeListener(
                 new CompoundButton.OnCheckedChangeListener() {
                     @Override
@@ -187,34 +194,48 @@ public class Main extends FragmentActivity {
                 Main.this.changeMode(position);
             }
         });
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         int curr_mode = prefs.getInt(Constants.dropType, Constants.DROPTYPE_MUSIC);
         pager.setCurrentItem(curr_mode);
+    }
 
-        if (!isServiceConnected) {
-            mainBreaker.setChecked(false);
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (isServiceConnected) {
+            unbindService(dropServiceConnection);
         }
     }
 
     private void changeMode(int mode) {
-        Toast.makeText(this, "CHANGED MODE", Toast.LENGTH_SHORT).show();
-
         if (isServiceConnected) {
             dropService.changeDropMode(mode);
         }
     }
 
     private void changePowerState(CompoundButton buttonView, boolean isOn) {
-        Toast.makeText(this, "CHANGED ENABLED", Toast.LENGTH_SHORT).show();
 
         if (isServiceConnected && !isOn) {
-            dropService.stopServiceAndSavePreference();
-            buttonView.setText("Stopped.");
+            SharedPreferences.Editor prefsEdit =
+                    PreferenceManager.getDefaultSharedPreferences(getBaseContext()).edit();
+            prefsEdit.putBoolean(Constants.dropEnabled, false);
+            prefsEdit.apply();
+
+            unbindService(dropServiceConnection);
+
+            buttonView.setText(R.string.switch_text_off);
+            isServiceConnected = false;
         }
         else if (!isServiceConnected && isOn) {
-            dropService.startServiceAndSavePreference();
-            buttonView.setText("Currently Running");
+            SharedPreferences.Editor prefsEdit =
+                    PreferenceManager.getDefaultSharedPreferences(getBaseContext()).edit();
+            prefsEdit.putBoolean(Constants.dropEnabled, true);
+            prefsEdit.apply();
+
+            Intent connectDropService = new Intent(this,DropService.class);
+            bindService(connectDropService, dropServiceConnection, Service.BIND_AUTO_CREATE);
+
+            buttonView.setText(R.string.switch_text);
+            isServiceConnected = true;
         }
     }
 

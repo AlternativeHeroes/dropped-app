@@ -42,19 +42,20 @@ public class DropService extends Service implements SensorEventListener {
     private String            uniqueID;
 
     public int     dropType;
-    public boolean dropEnabled;
     public boolean isFalling = false;
 
     public DropService() { }
 
     @Override
     public void onCreate() {
-
-        sensorMan   = (SensorManager)   getSystemService(Context.SENSOR_SERVICE);
         locationMan = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+        sensorMan   = (SensorManager)   getSystemService(Context.SENSOR_SERVICE);
         acceleration = sensorMan.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         startSensor();
+
+        player = MediaPlayer.create(getBaseContext(), R.raw.wheatley_sp_a1_wakeup_panic01);
+        player.setLooping(true);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         dropType = prefs.getInt(Constants.dropType, Constants.DROPTYPE_MUSIC);
@@ -85,6 +86,8 @@ public class DropService extends Service implements SensorEventListener {
     @Override
     public void onDestroy() {
         stopSensor();
+        player.release();
+        player = null;
         super.onDestroy();
     }
 
@@ -99,22 +102,15 @@ public class DropService extends Service implements SensorEventListener {
     public void onSensorChanged(SensorEvent sensorEvent) {
         if ( magnitude(sensorEvent.values) < EPSILON ) {
             //This code is executed when we get a drop phone event
-
-            ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
-            toneG.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
-
-            /* Location stuff */
-
-
-            Intent dropEventBroadcast = new Intent(Constants.dropEventAction);
-            sendBroadcast(dropEventBroadcast);
-            isFalling=true;
-        } else {
-            if(isFalling){
-                isFalling=false;
+            if (!isFalling) {
+                isFalling = true;
+                player.start();
+                sendFirebaseMessage();
             }
-
-
+        }
+        else if (isFalling) {
+            player.pause();
+            isFalling = false;
         }
     }
 
@@ -154,19 +150,12 @@ public class DropService extends Service implements SensorEventListener {
 
         //Firebase sync
         Firebase firebase = new Firebase("https://shining-fire-2142.firebaseio.com/");
+        firebase = firebase.child(uniqueID);
+        firebase = firebase.child(Long.toString(System.currentTimeMillis()));
         Map<String, String> users = new HashMap<String, String>();
         users.put("latitude",  Double.toString(location.getLatitude()));
         users.put("longitude", Double.toString(location.getLongitude()));
-        users.put("id",        uniqueID);
         firebase.setValue(users);
-    }
-
-    public void stopServiceAndSavePreference() {
-
-    }
-
-    public void startServiceAndSavePreference() {
-
     }
 
     public void changeDropMode(int mode) {
