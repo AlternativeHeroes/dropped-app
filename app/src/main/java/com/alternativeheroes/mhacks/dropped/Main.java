@@ -97,12 +97,7 @@ public class Main extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        WindowManager.LayoutParams attributes = getWindow().getAttributes();
-        attributes.flags |= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                         |  WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
-        getWindow().setAttributes(attributes);
 
         setContentView(R.layout.activity_main);
 
@@ -111,16 +106,15 @@ public class Main extends FragmentActivity {
         bindService(connectDropService, dropServiceConnection, Service.BIND_AUTO_CREATE);
 
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        pager = (ViewPager) findViewById(R.id.pager);
+        final View contentView = findViewById(R.id.fullscreen_content);
 
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
-
-        mSystemUiHider = SystemUiHider.getInstance(this, pager, HIDER_FLAGS);
+        mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
         mSystemUiHider.setup();
         mSystemUiHider
                 .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-                    // Cached values.
+
                     int mControlsHeight;
                     int mShortAnimTime;
 
@@ -157,7 +151,7 @@ public class Main extends FragmentActivity {
                 });
 
         // Set up the user interaction to manually show or hide the system UI.
-        pager.setOnClickListener(new View.OnClickListener() {
+        contentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (TOGGLE_ON_CLICK) {
@@ -176,31 +170,33 @@ public class Main extends FragmentActivity {
                 new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Main.this.changePowerState(isChecked);
+                        Main.this.changePowerState(buttonView, isChecked);
                     }
                 }
         );
 
+
         dropAdapter = new DropModePagerAdapter(getSupportFragmentManager());
-        pager.setAdapter(dropAdapter);
-        pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+        ((ViewPager) contentView).setAdapter(dropAdapter);
+        ((ViewPager) contentView).setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
                 Main.this.changeMode(position);
             }
         });
+
     }
 
     private void changeMode(int mode) {
 
     }
 
-    private void changePowerState(boolean isOn) {
+    private void changePowerState(CompoundButton buttonView, boolean isOn) {
         if (isServiceConnected && !isOn) {
-
+            buttonView.setText("Stopped.");
         }
         else if (!isServiceConnected && isOn) {
-
+            buttonView.setText("Currently Running");
         }
     }
 
