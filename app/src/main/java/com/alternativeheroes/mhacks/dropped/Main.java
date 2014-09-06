@@ -12,9 +12,19 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
@@ -25,7 +35,7 @@ import android.widget.ViewFlipper;
  *
  * @see SystemUiHider
  */
-public class Main extends Activity {
+public class Main extends FragmentActivity {
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -55,10 +65,13 @@ public class Main extends Activity {
     private SystemUiHider mSystemUiHider;
 
     /**
-     * For the swipe animations
+     * Provides each view for the view pager.
      */
-    private ViewFlipper viewFlipper;
-    private float prevX;
+    DropModePagerAdapter dropAdapter;
+    ViewPager pager;
+
+    private static final int[] covers = {R.drawable.drop_beat, R.drawable.scream};
+
     DropService dropService;
     boolean isServiceConnected=false;
 
@@ -85,10 +98,10 @@ public class Main extends Activity {
 
         Intent connectDropService = new Intent(this,DropService.class);
 
-        bindService(connectDropService,dropServiceConnection, Service.BIND_AUTO_CREATE);
+        bindService(connectDropService, dropServiceConnection, Service.BIND_AUTO_CREATE);
 
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        final View contentView = findViewById(R.id.fullscreen_content);
+        final View contentView = findViewById(R.id.pager);
 
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
@@ -148,69 +161,41 @@ public class Main extends Activity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
-        //viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+        findViewById(R.id.switch1).setOnTouchListener(mDelayHideTouchListener);
+        ((Switch) findViewById(R.id.switch1)).setOnCheckedChangeListener(
+            new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    Main.this.changePowerState(isChecked);
+                }
+            }
+        );
+
+        dropAdapter = new DropModePagerAdapter(getSupportFragmentManager());
+        pager = (ViewPager) findViewById(R.id.pager);
+        pager.setAdapter(dropAdapter);
+        pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                Main.this.changeMode(position);
+            }
+        });
     }
 
-    /*
-    @Override
-    public boolean onTouchEvent(MotionEvent touchEvent) {
-
-        Toast.makeText(this, "EVENT!", Toast.LENGTH_SHORT).show();
-
-        if (touchEvent.getAction() == MotionEvent.ACTION_DOWN) {
-            prevX = touchEvent.getX();
-        }
-        else if (touchEvent.getAction() != MotionEvent.ACTION_UP) {
-            return true;
-        }
-        float x = touchEvent.getX();
-
-        Toast.makeText(this, "From " + prevX + " to " + x, Toast.LENGTH_SHORT).show();
-
-        if (prevX > x) {
-            if (viewFlipper.getDisplayedChild() == 0) {
-                return true;
-            }
-            viewFlipper.setInAnimation(this, R.anim.in_from_left);
-            viewFlipper.setOutAnimation(this, R.anim.out_to_right);
-            viewFlipper.showNext();
-        } else if (prevX > x) {
-            if (viewFlipper.getDisplayedChild() == 1) {
-                return true;
-            }
-            viewFlipper.setInAnimation(this, R.anim.in_from_right);
-            viewFlipper.setOutAnimation(this, R.anim.out_to_left);
-            viewFlipper.showPrevious();
-        }
-    return true;
+    private void changeMode(int mode) {
+        Toast.makeText(this, "Changed to " + mode, Toast.LENGTH_SHORT).show();
     }
-    */
-    /*
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
 
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            prevX = event.getX();
+    private void changePowerState(boolean isOn) {
+        Toast.makeText(this, "Is in use set to " + isOn, Toast.LENGTH_SHORT).show();
+
+        if (isServiceConnected && !isOn) {
+
         }
-        else if (event.getAction() == MotionEvent.ACTION_UP) {
-            float x = event.getX();
+        else if (!isServiceConnected && isOn) {
 
-            if (prevX > x && viewFlipper.getDisplayedChild() != 0) {
-                viewFlipper.setInAnimation(this, R.anim.in_from_left);
-                viewFlipper.setOutAnimation(this, R.anim.out_to_right);
-                viewFlipper.showNext();
-            }
-            else if (prevX > x && viewFlipper.getDisplayedChild() != 1) {
-                viewFlipper.setInAnimation(this, R.anim.in_from_right);
-                viewFlipper.setOutAnimation(this, R.anim.out_to_left);
-                viewFlipper.showPrevious();
-            }
         }
-
-        return super.dispatchTouchEvent(event);
     }
-    */
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -253,5 +238,47 @@ public class Main extends Activity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    public static class DropModePagerAdapter extends FragmentPagerAdapter {
+
+        public DropModePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int i) {
+            Fragment frag = new FullscreenImage();
+            Bundle args = new Bundle();
+            args.putInt(FullscreenImage.IMAGE_ID_TAG, covers[i]);
+            frag.setArguments(args);
+            return frag;
+        }
+
+        @Override
+        public int getCount() {
+            return covers.length;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return "Section " + (position + 1);
+        }
+    }
+
+    public static class FullscreenImage extends Fragment {
+
+        public static final String IMAGE_ID_TAG = "Image_R_ID";
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.image, container, false);
+
+            ((ImageView) rootView.findViewById(R.id.coverImage)).setImageResource(
+                    getArguments().getInt(IMAGE_ID_TAG));
+
+            return rootView;
+        }
     }
 }

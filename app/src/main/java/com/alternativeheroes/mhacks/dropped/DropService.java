@@ -31,18 +31,26 @@ public class DropService extends Service implements SensorEventListener {
 
     public boolean isFalling = false;
 
-    public DropService() {
+    public DropService() { }
+
+    @Override
+    public void onCreate() {
+        sensorMan = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        acceleration = sensorMan.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         startSensor();
         dropPreference=getSharedPreferences(Constants.dropPreference,0);
         dropType = dropPreference.getInt(Constants.dropType,Constants.DROPTYPE_MUSIC);
 
-
+        LocationManager locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (location == null) {
+            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
+        Log.d(TAG, "Location X:" + (location.getLatitude() * 10000) + " ,Y:" + (location.getLatitude() * 10000));
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        sensorMan = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        acceleration = sensorMan.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         //startSensor();
         return mBinder;
     }
@@ -75,7 +83,6 @@ public class DropService extends Service implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        Log.d(TAG, "Sensor Event");
         if (Math.sqrt(
                 Math.pow(sensorEvent.values[0], 2) +
                         Math.pow(sensorEvent.values[1], 2) +
@@ -85,9 +92,7 @@ public class DropService extends Service implements SensorEventListener {
             ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
             toneG.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
 
-            LocationManager locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
-            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            Log.d(TAG,"Location X:" + (location.getLatitude()*10000) + " ,Y:" + (location.getLatitude()*10000));
+            /* Location stuff */
 
 
             Intent dropEventBroadcast = new Intent(Constants.dropEventAction);
