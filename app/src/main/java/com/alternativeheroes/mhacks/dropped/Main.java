@@ -194,7 +194,7 @@ public class Main extends FragmentActivity {
                 Main.this.changeMode(position);
             }
         });
-        int curr_mode = prefs.getInt(Constants.dropType, Constants.DROPTYPE_MUSIC);
+        int curr_mode = prefs.getInt(Constants.dropType, Constants.DROPTYPE_FLUX_PAVILION);
         pager.setCurrentItem(curr_mode);
     }
 
@@ -208,6 +208,7 @@ public class Main extends FragmentActivity {
 
     private void changeMode(int mode) {
         if (isServiceConnected) {
+            //Toast.makeText(getBaseContext(), "HEY ", Toast.LENGTH_SHORT).show();
             dropService.changeDropMode(mode);
         }
     }
