@@ -32,43 +32,28 @@
                 android:text="@string/dummy_button" />
 
         </LinearLayout>
+
+        <TextView android:id="@+id/fullscreen_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:keepScreenOn="true"
+            android:textColor="#33b5e5"
+            android:textStyle="bold"
+            android:textSize="50sp"
+            android:gravity="center"
+            android:text="@string/dummy_content" />
+
     </FrameLayout>
 
-    <ViewFlipper
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/viewFlipper" >
+    <ImageSwitcher
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageSwitcher" >
 
-        <FrameLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
-
-            <TextView android:id="@+id/fullscreen_content"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:keepScreenOn="true"
-                android:textColor="#33b5e5"
-                android:textStyle="bold"
-                android:textSize="50sp"
-                android:gravity="center"
-                android:text="@string/dummy_content" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
-
-            <TextView
-                android:id="@+id/textView2"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:keepScreenOn="true"
-                android:textColor="#33b5e5"
-                android:textStyle="bold"
-                android:textSize="50sp"
-                android:gravity="center"
-                android:text="DUMMY CONTENT TOO" />
-        </FrameLayout>
-    </ViewFlipper>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageView" />
+    </ImageSwitcher>
 
 </FrameLayout>

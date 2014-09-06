@@ -92,6 +92,7 @@ public class Main extends Activity {
 
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
+
         mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
         mSystemUiHider.setup();
         mSystemUiHider
@@ -151,36 +152,65 @@ public class Main extends Activity {
         viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
     }
 
+    /*
     @Override
     public boolean onTouchEvent(MotionEvent touchEvent) {
+
+        Toast.makeText(this, "EVENT!", Toast.LENGTH_SHORT).show();
 
         if (touchEvent.getAction() == MotionEvent.ACTION_DOWN) {
             prevX = touchEvent.getX();
         }
-        else if (touchEvent.getAction() == MotionEvent.ACTION_UP) {
-            float x = touchEvent.getX();
+        else if (touchEvent.getAction() != MotionEvent.ACTION_UP) {
+            return true;
+        }
+        float x = touchEvent.getX();
 
-            Toast.makeText(this, "From " + prevX + " to " + x, Toast.LENGTH_SHORT);
+        Toast.makeText(this, "From " + prevX + " to " + x, Toast.LENGTH_SHORT).show();
 
-            if (prevX > x) {
-                if (viewFlipper.getDisplayedChild() == 0) {
-                    return false;
-                }
+        if (prevX > x) {
+            if (viewFlipper.getDisplayedChild() == 0) {
+                return true;
+            }
+            viewFlipper.setInAnimation(this, R.anim.in_from_left);
+            viewFlipper.setOutAnimation(this, R.anim.out_to_right);
+            viewFlipper.showNext();
+        } else if (prevX > x) {
+            if (viewFlipper.getDisplayedChild() == 1) {
+                return true;
+            }
+            viewFlipper.setInAnimation(this, R.anim.in_from_right);
+            viewFlipper.setOutAnimation(this, R.anim.out_to_left);
+            viewFlipper.showPrevious();
+        }
+    return true;
+    }
+    */
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            prevX = event.getX();
+        }
+        else if (event.getAction() == MotionEvent.ACTION_UP) {
+            float x = event.getX();
+
+            if (prevX > x && viewFlipper.getDisplayedChild() != 0) {
                 viewFlipper.setInAnimation(this, R.anim.in_from_left);
                 viewFlipper.setOutAnimation(this, R.anim.out_to_right);
                 viewFlipper.showNext();
             }
-            else if (prevX > x) {
-                if (viewFlipper.getDisplayedChild() == 1) {
-                    return false;
-                }
+            else if (prevX > x && viewFlipper.getDisplayedChild() != 1) {
                 viewFlipper.setInAnimation(this, R.anim.in_from_right);
                 viewFlipper.setOutAnimation(this, R.anim.out_to_left);
                 viewFlipper.showPrevious();
             }
         }
-        return false;
+
+        return super.dispatchTouchEvent(event);
     }
+
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
