@@ -41,7 +41,7 @@ public class DropService extends Service {
     public boolean isFalling = false;
 
     private SensorHandlerInterface[] profiles =
-            { new FluxPavilionHandler(), new WheatleyHandler() };
+            { new FluxPavilionHandler(), new WheatleyHandler(), new TaylorGoatHandler() };
 
     private SensorHandlerInterface profile;
 
@@ -180,8 +180,9 @@ public class DropService extends Service {
         public void onSensorChanged(SensorEvent event) {
             if ( magnitude(event.values) < EPSILON ) {
                 if (!isInDrop) {
-                    player.start();
+                    player.seekTo(dropStart);
                     isInDrop = true;
+                    sendFirebaseMessage();
                 }
             }
             else if (isInDrop) {
@@ -207,6 +208,11 @@ public class DropService extends Service {
         @Override
         public int getAudioResource() {
             return R.raw.i_cant_stop;
+        }
+
+        @Override
+        public int getCoverResource() {
+            return R.drawable.drop_beat;
         }
 
         @Override
@@ -246,9 +252,57 @@ public class DropService extends Service {
         }
 
         @Override
+        public int getCoverResource() {
+            return R.drawable.scream;
+        }
+
+        @Override
         public void onInit() {
             isFalling = false;
             player.setLooping(true);
         }
+    }
+
+    public class TaylorGoatHandler implements SensorHandlerInterface {
+        private boolean hasDropped = false;
+        private boolean isFalling  = false;
+        private int     dropStart  = 13690;
+        private int     dropEnd    = 14524;
+
+        @Override
+        public int getAudioResource() {
+            return R.raw.taylor_goat;
+        }
+
+        @Override
+        public int getCoverResource() {
+            return R.drawable.taylor_swift;
+        }
+
+        @Override
+        public void onInit() {
+            hasDropped = false;
+            isFalling  = false;
+            player.seekTo(dropStart);
+            player.setLooping(false);
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if ( magnitude(event.values) < EPSILON ) {
+                if (!isFalling) {
+                    player.start();
+                    isFalling = true;
+                    sendFirebaseMessage();
+                }
+            }
+            else if (isFalling) {
+                isFalling = false;
+                player.seekTo(dropEnd);
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) { }
     }
 }

@@ -7,5 +7,6 @@ import android.hardware.SensorEventListener;
  */
 public interface SensorHandlerInterface extends SensorEventListener {
     public int getAudioResource();
+    public int getCoverResource();
     public void onInit();
 }

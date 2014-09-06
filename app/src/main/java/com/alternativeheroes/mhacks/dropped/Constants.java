@@ -9,6 +9,7 @@ public class Constants {
 
     public static int DROPTYPE_FLUX_PAVILION = 0;
     public static int DROPTYPE_WHEATLEY = 1;
+    public static int DROPTYPE_TAYLORGOAT = 2;
     public static String dropType = "com.alternateheroes.mhacks.dropped.dropType";
 
     public static final String dropEnabled = "com.alternateheroes.mhacks.dropped.dropEnabled";

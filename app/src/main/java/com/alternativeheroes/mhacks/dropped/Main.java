@@ -76,7 +76,8 @@ public class Main extends FragmentActivity {
     DropModePagerAdapter dropAdapter;
     ViewPager pager;
 
-    private static final int[] covers = {R.drawable.drop_beat, R.drawable.scream};
+    private static final int[] covers =
+            {R.drawable.drop_beat, R.drawable.scream, R.drawable.taylor_swift};
 
     DropService dropService;
     boolean isServiceConnected=false;
