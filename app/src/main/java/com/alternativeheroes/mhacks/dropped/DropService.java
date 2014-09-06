@@ -20,6 +20,11 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.firebase.client.Firebase;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class DropService extends Service implements SensorEventListener {
 
     private static final double EPSILON = 1.0;
@@ -55,6 +60,13 @@ public class DropService extends Service implements SensorEventListener {
         WifiManager manager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         WifiInfo info = manager.getConnectionInfo();
         uniqueID = info.getMacAddress();
+
+        //Firebase sync
+        Firebase firebase = new Firebase("https://e2g0l1uaxa8.firebaseio-demo.com/");
+        Map<String, String> users = new HashMap<String, String>();
+        users.put("latitude", Double.toString(location.getLatitude()));
+        users.put("longitude", Double.toString(location.getLongitude()));
+        firebase.setValue(users);
     }
 
     @Override

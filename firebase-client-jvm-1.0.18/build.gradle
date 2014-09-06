@@ -1,0 +1,2 @@
+configurations.create("default")
+artifacts.add("default", file('firebase-client-jvm-1.0.18.jar'))
