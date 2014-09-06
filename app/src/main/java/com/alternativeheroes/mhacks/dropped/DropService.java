@@ -3,10 +3,14 @@ package com.alternativeheroes.mhacks.dropped;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.ToneGenerator;
@@ -22,16 +26,44 @@ public class DropService extends Service implements SensorEventListener {
     private Sensor        acceleration;
     private final IBinder mBinder = new LocalBinder();
     private MediaPlayer player;
+    SharedPreferences dropPreference;
+    int dropType;
+
+    public boolean isFalling = false;
 
     public DropService() {
+        startSensor();
+        dropPreference=getSharedPreferences(Constants.dropPreference,0);
+        dropType = dropPreference.getInt(Constants.dropType,Constants.DROPTYPE_MUSIC);
+
+
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         sensorMan = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         acceleration = sensorMan.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorMan.registerListener(this, acceleration, SensorManager.SENSOR_DELAY_GAME);
+        //startSensor();
         return mBinder;
+    }
+
+    private void startSensor() {
+        sensorMan.registerListener(this, acceleration, SensorManager.SENSOR_DELAY_GAME);
+    }
+
+    private void stopSensor() {
+        sensorMan.unregisterListener(this);
+    }
+
+    @Override
+    public void unbindService(ServiceConnection conn) {
+        super.unbindService(conn);
+    }
+
+    @Override
+    public void onDestroy() {
+        stopSensor();
+        super.onDestroy();
     }
 
     public class LocalBinder extends Binder {
@@ -49,9 +81,24 @@ public class DropService extends Service implements SensorEventListener {
                         Math.pow(sensorEvent.values[1], 2) +
                         Math.pow(sensorEvent.values[2], 2) )  < EPSILON) {
             //This code is executed when we get a drop phone event
-            Log.d(TAG, "Drop phone event");
+
             ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
             toneG.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
+
+            LocationManager locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
+            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Log.d(TAG,"Location X:" + (location.getLatitude()*10000) + " ,Y:" + (location.getLatitude()*10000));
+
+
+            Intent dropEventBroadcast = new Intent(Constants.dropEventAction);
+            sendBroadcast(dropEventBroadcast);
+            isFalling=true;
+        } else {
+            if(isFalling){
+                isFalling=false;
+            }
+
+
         }
 
 }
