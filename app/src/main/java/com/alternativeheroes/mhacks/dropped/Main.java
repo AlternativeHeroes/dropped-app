@@ -25,6 +25,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Switch;
@@ -96,7 +97,13 @@ public class Main extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+        attributes.flags |= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                         |  WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+        getWindow().setAttributes(attributes);
+
         setContentView(R.layout.activity_main);
 
         Intent connectDropService = new Intent(this,DropService.class);
@@ -104,12 +111,12 @@ public class Main extends FragmentActivity {
         bindService(connectDropService, dropServiceConnection, Service.BIND_AUTO_CREATE);
 
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        final View contentView = findViewById(R.id.pager);
+        pager = (ViewPager) findViewById(R.id.pager);
 
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
 
-        mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
+        mSystemUiHider = SystemUiHider.getInstance(this, pager, HIDER_FLAGS);
         mSystemUiHider.setup();
         mSystemUiHider
                 .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
@@ -150,7 +157,7 @@ public class Main extends FragmentActivity {
                 });
 
         // Set up the user interaction to manually show or hide the system UI.
-        contentView.setOnClickListener(new View.OnClickListener() {
+        pager.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (TOGGLE_ON_CLICK) {
@@ -175,7 +182,6 @@ public class Main extends FragmentActivity {
         );
 
         dropAdapter = new DropModePagerAdapter(getSupportFragmentManager());
-        pager = (ViewPager) findViewById(R.id.pager);
         pager.setAdapter(dropAdapter);
         pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
@@ -186,12 +192,10 @@ public class Main extends FragmentActivity {
     }
 
     private void changeMode(int mode) {
-        Toast.makeText(this, "Changed to " + mode, Toast.LENGTH_SHORT).show();
+
     }
 
     private void changePowerState(boolean isOn) {
-        Toast.makeText(this, "Is in use set to " + isOn, Toast.LENGTH_SHORT).show();
-
         if (isServiceConnected && !isOn) {
 
         }

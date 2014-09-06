@@ -18,10 +18,13 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 
 import com.firebase.client.Firebase;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,14 +32,13 @@ public class DropService extends Service implements SensorEventListener {
 
     private static final double EPSILON = 1.0;
     private static final String TAG = DropService.class.getName();
+    private final IBinder mBinder = new LocalBinder();
     private SensorManager sensorMan;
     private Sensor        acceleration;
-    private final IBinder mBinder = new LocalBinder();
-    private MediaPlayer player;
+    private MediaPlayer   player;
+    private String        uniqueID;
     SharedPreferences dropPreference;
     int dropType;
-
-    private String uniqueID;
 
     public boolean isFalling = false;
 
@@ -59,13 +61,26 @@ public class DropService extends Service implements SensorEventListener {
 
         WifiManager manager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         WifiInfo info = manager.getConnectionInfo();
-        uniqueID = info.getMacAddress();
+        String mac = info.getMacAddress();
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(mac.getBytes());
+            byte[] digest = md.digest();
+            StringBuffer sb = new StringBuffer();
+
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b & 0xff));
+            }
+            uniqueID = sb.toString();
+        }
+        catch (NoSuchAlgorithmException err) { }
 
         //Firebase sync
         Firebase firebase = new Firebase("https://e2g0l1uaxa8.firebaseio-demo.com/");
         Map<String, String> users = new HashMap<String, String>();
-        users.put("latitude", Double.toString(location.getLatitude()));
+        users.put("latitude",  Double.toString(location.getLatitude()));
         users.put("longitude", Double.toString(location.getLongitude()));
+        users.put("id",        uniqueID);
         firebase.setValue(users);
     }
 
@@ -125,11 +140,8 @@ public class DropService extends Service implements SensorEventListener {
 
 
         }
-
-}
+    }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
-    }
+    public void onAccuracyChanged(Sensor sensor, int i) { }
 }
