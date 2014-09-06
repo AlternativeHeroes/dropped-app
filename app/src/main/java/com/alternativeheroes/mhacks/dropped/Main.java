@@ -149,7 +149,7 @@ public class Main extends Activity {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
-        viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+        //viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
     }
 
     /*
@@ -186,7 +186,7 @@ public class Main extends Activity {
     return true;
     }
     */
-
+    /*
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
 
@@ -210,7 +210,7 @@ public class Main extends Activity {
 
         return super.dispatchTouchEvent(event);
     }
-
+    */
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {

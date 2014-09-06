@@ -30,6 +30,7 @@ public class DropService extends Service implements SensorEventListener {
     public IBinder onBind(Intent intent) {
         sensorMan = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         acceleration = sensorMan.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorMan.registerListener(this, acceleration, SensorManager.SENSOR_DELAY_GAME);
         return mBinder;
     }
 
@@ -42,6 +43,7 @@ public class DropService extends Service implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+        Log.d(TAG, "Sensor Event");
         if (Math.sqrt(
                 Math.pow(sensorEvent.values[0], 2) +
                         Math.pow(sensorEvent.values[1], 2) +
