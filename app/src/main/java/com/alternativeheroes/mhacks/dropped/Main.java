@@ -4,9 +4,14 @@ import com.alternativeheroes.mhacks.dropped.util.SystemUiHider;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Service;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -54,12 +59,33 @@ public class Main extends Activity {
      */
     private ViewFlipper viewFlipper;
     private float prevX;
+    DropService dropService;
+    boolean isServiceConnected=false;
+
+    ServiceConnection dropServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            DropService.LocalBinder mBinder = (DropService.LocalBinder)iBinder;
+            dropService = mBinder.getService();
+            isServiceConnected=true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            isServiceConnected=false;
+            dropService=null;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
+
+        Intent connectDropService = new Intent(this,DropService.class);
+
+        bindService(connectDropService,dropServiceConnection, Service.BIND_AUTO_CREATE);
 
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
