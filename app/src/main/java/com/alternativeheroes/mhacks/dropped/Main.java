@@ -225,6 +225,7 @@ public class Main extends FragmentActivity {
 
             unbindService(dropServiceConnection);
 
+
             buttonView.setText(R.string.switch_text_off);
             isServiceConnected = false;
         }

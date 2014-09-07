@@ -82,6 +82,7 @@ public class DropService extends Service {
     @Override
     public void unbindService(ServiceConnection conn) {
         super.unbindService(conn);
+        releasePlayer();
     }
 
     @Override
@@ -177,13 +178,15 @@ public class DropService extends Service {
         private static final int songReset = 90000;
         private boolean isInDrop   = false;
         private boolean hasDropped = false;
+        private boolean lock       = false;
 
         @Override
         public void onSensorChanged(SensorEvent event) {
             if ( magnitude(event.values) < EPSILON ) {
-                if (!isInDrop) {
+                if (!isInDrop && !lock) {
                     player.seekTo(dropStart);
                     isInDrop = true;
+                    lock = true;
                     sendFirebaseMessage();
                 }
             }
@@ -195,6 +198,7 @@ public class DropService extends Service {
             else if (hasDropped) {
                 if (player.getCurrentPosition() >= songReset) {
                     hasDropped = false;
+                    lock = false;
                 }
             }
             else {
@@ -223,6 +227,7 @@ public class DropService extends Service {
             player.start();
             isInDrop = false;
             hasDropped = false;
+            lock = false;
         }
     }
 
@@ -318,9 +323,10 @@ public class DropService extends Service {
         private static final int startScream = 125470;
         private static final int endScream   = 131592;
         private static final int startPain   = 154845;
-        private static final int endPain     = 188642;
+        private static final int endPain     = 187042;
 
         private boolean isFalling = false;
+        private boolean lock      = false;
 
         @Override
         public int getAudioResource() {
@@ -335,15 +341,17 @@ public class DropService extends Service {
         @Override
         public void onInit() {
             isFalling = false;
+            lock = false;
             player.seekTo(startScream);
         }
 
         @Override
         public void onSensorChanged(SensorEvent event) {
             if ( magnitude(event.values) < EPSILON ) {
-                if (!isFalling) {
+                if (!isFalling && !lock) {
                     player.start();
                     isFalling = true;
+                    lock = true;
                     sendFirebaseMessage();
                 }
             }
@@ -354,6 +362,7 @@ public class DropService extends Service {
             else if (player.getCurrentPosition() >= endPain) {
                 player.pause();
                 player.seekTo(startScream);
+                lock = false;
             }
         }
 
@@ -364,8 +373,9 @@ public class DropService extends Service {
     public class SkrillexHandler implements SensorHandlerInterface {
 
         private boolean isFalling = false;
-        private int     dropStart = 14524;
-        private int     songStart = 40093;
+        private boolean lock       = false;
+        private int     dropStart = 40093;
+        private int     songStart = 41652;
         private int     songEnd   = 60000;
 
         @Override
@@ -381,15 +391,17 @@ public class DropService extends Service {
         @Override
         public void onInit() {
             isFalling = false;
+            lock      = false;
             player.seekTo(dropStart);
         }
 
         @Override
         public void onSensorChanged(SensorEvent event) {
             if ( magnitude(event.values) < EPSILON ) {
-                if (!isFalling) {
+                if (!isFalling && !lock) {
                     player.start();
                     isFalling = true;
+                    lock = true;
                     sendFirebaseMessage();
                 }
             }
@@ -399,6 +411,7 @@ public class DropService extends Service {
             }
             else if (player.getCurrentPosition() >= songEnd) {
                 player.pause();
+                lock = false;
                 onInit();
             }
         }
