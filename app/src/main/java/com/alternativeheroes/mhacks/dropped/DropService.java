@@ -41,7 +41,8 @@ public class DropService extends Service {
     public boolean isFalling = false;
 
     private SensorHandlerInterface[] profiles =
-            { new FluxPavilionHandler(), new WheatleyHandler(), new TaylorGoatHandler() };
+            { new FluxPavilionHandler(), new WheatleyHandler(), new TaylorGoatHandler(),
+              new AustinPowersHandler(), new SkrillexHandler() };
 
     private SensorHandlerInterface profile;
 
@@ -57,8 +58,9 @@ public class DropService extends Service {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         dropType = prefs.getInt(Constants.dropType, Constants.DROPTYPE_FLUX_PAVILION);
         profile = profiles[dropType];
-        startSensor();
         player = MediaPlayer.create(getBaseContext(), profile.getAudioResource());
+        profile.onInit();
+        startSensor();
 
         uniqueID = getUniqueID();
     }
@@ -226,20 +228,25 @@ public class DropService extends Service {
 
     public class WheatleyHandler implements SensorHandlerInterface {
         private boolean isFalling = false;
+        private int delayCounter  = 0;
+        private static final int delay = 25;
 
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
             if ( magnitude(sensorEvent.values) < EPSILON ) {
                 //This code is executed when we get a drop phone event
                 if (!isFalling) {
-                    isFalling = true;
                     player.start();
+                    isFalling = true;
+                    delayCounter = 0;
                     sendFirebaseMessage();
                 }
             }
             else if (isFalling) {
+                if (++delayCounter > delay) {
+                    isFalling = false;
+                }
                 player.pause();
-                isFalling = false;
             }
         }
 
@@ -299,6 +306,100 @@ public class DropService extends Service {
             else if (isFalling) {
                 isFalling = false;
                 player.seekTo(dropEnd);
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) { }
+    }
+
+    public class AustinPowersHandler implements SensorHandlerInterface {
+
+        private static final int startScream = 125470;
+        private static final int endScream   = 131592;
+        private static final int startPain   = 154845;
+        private static final int endPain     = 188642;
+
+        private boolean isFalling = false;
+
+        @Override
+        public int getAudioResource() {
+            return R.raw.austin_powers;
+        }
+
+        @Override
+        public int getCoverResource() {
+            return R.drawable.austin_powers;
+        }
+
+        @Override
+        public void onInit() {
+            isFalling = false;
+            player.seekTo(startScream);
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if ( magnitude(event.values) < EPSILON ) {
+                if (!isFalling) {
+                    player.start();
+                    isFalling = true;
+                    sendFirebaseMessage();
+                }
+            }
+            else if (isFalling) {
+                isFalling = false;
+                player.seekTo(startPain);
+            }
+            else if (player.getCurrentPosition() >= endPain) {
+                player.pause();
+                player.seekTo(startScream);
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) { }
+    }
+
+    public class SkrillexHandler implements SensorHandlerInterface {
+
+        private boolean isFalling = false;
+        private int     dropStart = 14524;
+        private int     songStart = 40093;
+        private int     songEnd   = 60000;
+
+        @Override
+        public int getAudioResource() {
+            return R.raw.skrillex;
+        }
+
+        @Override
+        public int getCoverResource() {
+            return R.drawable.skrillex;
+        }
+
+        @Override
+        public void onInit() {
+            isFalling = false;
+            player.seekTo(dropStart);
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if ( magnitude(event.values) < EPSILON ) {
+                if (!isFalling) {
+                    player.start();
+                    isFalling = true;
+                    sendFirebaseMessage();
+                }
+            }
+            else if (isFalling) {
+                isFalling = false;
+                player.seekTo(songStart);
+            }
+            else if (player.getCurrentPosition() >= songEnd) {
+                player.pause();
+                onInit();
             }
         }
 

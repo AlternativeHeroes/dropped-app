@@ -77,7 +77,8 @@ public class Main extends FragmentActivity {
     ViewPager pager;
 
     private static final int[] covers =
-            {R.drawable.drop_beat, R.drawable.scream, R.drawable.taylor_swift};
+            { R.drawable.drop_beat,     R.drawable.scream, R.drawable.taylor_swift,
+              R.drawable.austin_powers, R.drawable.skrillex };
 
     DropService dropService;
     boolean isServiceConnected=false;
